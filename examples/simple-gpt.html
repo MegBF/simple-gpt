@@ -1,0 +1,64 @@
+<html>
+<head>
+<script src="../js/jquery-1.11.2.min.js"></script>
+<script src="../js/simple-gpt.js"></script>
+<script>
+var config = {
+	pageTargeting: {
+	"all":"ads",
+	"getThis":"Targeting" 
+	},
+	zone: "/4213/whattoexpect/firstyear//milestones",
+	inview: true,
+	ads: {
+		rightRailAd1: {
+		sizeSet: "[[300, 250]]",
+		companion: false,
+		skinAd: false,
+		disabled: false,
+		mapping: "googletag.sizeMapping().addSize([300, 300], [300, 250]).build();",
+		slotTargeting: 
+			{
+			"sauce":"awesome"
+			}
+		},
+				headerAd: {
+		sizeSet: "[[728, 90], [970, 90], [320, 50]]",
+		companion: false,
+		skinAd: false,
+		disabled: false,
+		mapping: "googletag.sizeMapping().addSize([320, 100], [320, 50]).addSize([728, 120], [[728, 90],[970, 90]]).build();",
+		slotTargeting: {
+			"foo": "bar"
+			}
+		},
+		rightRailAd2: {
+		sizeSet: "[[300, 250]]",
+		companion: false,
+		skinAd: false,
+		disabled: false,
+		mapping: "googletag.sizeMapping().addSize([300, 300], [300, 250]).build();",
+		slotTargeting: 
+			{
+			"sauce":"awesome"
+			}
+		},
+		
+		
+		
+	}
+}
+
+   simpleGPT = new simpleGPTConstructor(config);
+	simpleGPT.init(); 
+	</script>
+		<link rel="stylesheet" type="text/css" href="../css/style.css" />
+	</head>
+	<body>
+	<div id="headerAd"></div>
+	<div id="rightRailAd1"></div>
+	<div id="rightRailAd2"></div>
+	</body>
+	</html>
+	
+	
