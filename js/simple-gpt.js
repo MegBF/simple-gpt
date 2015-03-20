@@ -48,9 +48,9 @@ $(window).one("gpt-constructor-ready", function () {
 
 
 
-(function (w, $) {
+(function (w, $, $$) {
     "use strict";
-
+	
     w.simpleGPTConstructor = function (config) {
         var self = this;
 
@@ -117,36 +117,48 @@ $(window).one("gpt-constructor-ready", function () {
             }
 
         },
+		/** ajax files
+		* borrowed from http://stackoverflow.com/questions/8567114/how-to-make-an-ajax-call-without-jquery
+		* @param {string} filename
+		* @param {function} callback
+		*/
+		insertScript: function (fileName, callback) {
+	    var script = document.createElement("script");
+	    script.async = true;
+	    script.type = "text/javascript";
+	    var useSSL = "https:" == document.location.protocol;
+	    script.src = (useSSL ? "https:" : "http:") + fileName;
+		if (script.readyState){
+			script.onreadystatechange = function() {
+				if (script.readyState == "loaded" || script.readyState == "complete") {
+					script.onreadystatechange = null;
+					callback();
+				}
+			};
+		} else {
+			script.onload = callback
+		}
+	    var node =document.getElementsByTagName("script")[0];
+	    node.parentNode.insertBefore(script, node);
+		},
         /**
         * loads GPT script and GPT proxy script (required for mobile GPT use)
         */
+		
         loadGptScript: function () {
-            var self = this;
-            $.getScript('http://s0.2mdn.net/instream/html5/gpt_proxy.js', function (script, textStatus) {
-                if (textStatus === 'success') {
-                    self.isProxyLoaded = true;
-                    self.message('GPT proxy loaded successfully');
-                } else {
-                    self.isProxyLoaded = false;
-                    console.log('GPT proxy not loaded successfully. Ads may not work properly on mobile devices.');
-                }
-            }).done(function () {
-                $.getScript('http://www.googletagservices.com/tag/js/gpt.js', function (script, textStatus) {
-                    if (textStatus === 'success') {
-                        self.isGptLoaded = true;
-                        self.message('gpt script was loaded successfully!');
-                    } else {
-                        self.isGptLoaded = false;
-                        console.log('gpt script was not loaded successfully.');
-                    }
-                }).done(function () {
-                    if (self.initSuccess == false ) {
+			var self = this;
+            self.insertScript('//s0.2mdn.net/instream/html5/gpt_proxy.js', function() { 
+				self.message('GPT proxy loaded successfully');
+                self.isProxyLoaded = true;
+			});
+				self.insertScript('//www.googletagservices.com/tag/js/gpt.js', function () {
+					self.isGptLoaded = true;
+					self.message('gpt script was loaded successfully!');
+					if (self.initSuccess == false ) {
 						self.init();
-                        
-                    }
-                });
-            });
-        },
+					}
+				});
+		},
 
 
         /* lazyDisplayThisAd - if the ad is in view, load it. If not, set a scroll event that will check to see when it is in view, and then load it.
@@ -172,18 +184,18 @@ $(window).one("gpt-constructor-ready", function () {
 
             var adIsInView = isElementInViewport(document.querySelector("#" + ad.id));
             // var adIsInView = ElementInViewport($("#" + ad.id));
-            if (adIsInView != undefined) {
+            if (adIsInView != false) {
                 self.message(ad.id + ' is in view!');
                 self.displayAd(ad);
             }
-            else if ($("#" + ad.id).length) {
+            else if ($$("#" + ad.id).length) {
                 if (ad.number <= self.totalAds) {
                     self.message("setting a scroll event for ad " + ad.id);
                     $(document).on("scroll." + ad.id, function () {
                         self.message("scroll." + ad.id);
-                        adIsInView = $("#" + ad.id + ":in-viewport")[0];
+                        adIsInView = isElementInViewport(document.querySelector("#" + ad.id));
                         // if the ad is in view, load it
-                        if (adIsInView != undefined) {
+                        if (adIsInView != false) {
                             self.displayAd(ad);
                         }
                     });
@@ -305,7 +317,7 @@ $(window).one("gpt-constructor-ready", function () {
                 categoryExclusion = "";
             if (ad.categoryExclusion) { categoryExclusion = ".setCategoryExclusion('" + ad.categoryExclusion + "')"; }
             var adNumber = id.replace(/\D/g, '');
-            if (ad.loaded == false && $("#" + ad.id).length && adNumber <= self.totalAds) {
+            if (ad.loaded == false && $$("#" + ad.id).length && adNumber <= self.totalAds) {
                 if (ad.companion == false) {
                     if (ad.skinAd.toString().toLowerCase() == "true")
                         adRequest += "\n\n" + id + " = googletag.defineOutOfPageSlot('" + self.zone + "', '" + id + "')\n" + self.addTargeting("slot", slotTargeting) + ".addService(googletag.pubads());\n";
@@ -350,33 +362,9 @@ $(window).one("gpt-constructor-ready", function () {
 
 
         displayLabel: function (x) {
-            $("#" + x).addClass("visible gpt-loaded");
+            $$("#" + x).addClass("visible gpt-loaded");
         },
-		
-        // ADD A CREATE CALLBACK FUNCTION
-		// ADD IT NOW
-		// !!!
-		
-        /* grab the ad call url and insert it into a div overlaying the ad when the ?gptdebug parameter is used
-        * @param {string} adId
-        *
-        */
-        debugAdCode: function (adId) {
-            if (window.location.href.indexOf("debugadcode") > -1) {
-                var x = googletag.service_manager_instance.a.publisher_ads.L;
-                for (var i in x) {
-                    if (x[i].b.d == adId) {
-                        var adCall = x[i].s,
-                        adPos = $("#" + adId).offset();
-                        if (window.deviceType != "Mobile") {
-                            $("#" + adId).prepend("'<div id='" + adId + "-debug' class='gpt-ad-debug'><h4>" + adId + "Call:</h4><textarea>" + adCall + "</textarea></div>");
-                        }
-                        console.log(adId + ' ad call is ' + adCall);
-                        return;
-                    }
-                }
-            }
-        },
+
         message: function (msg) {
             if (window.location.href.indexOf("gptdebug") > -1) {
                 console.info(msg);
@@ -385,4 +373,4 @@ $(window).one("gpt-constructor-ready", function () {
 
     };
 
-})(window, jQuery); 
+})(window, jQuery, function(select) { return document.querySelectorAll(select); }); 
